@@ -7,7 +7,7 @@ import Home from './pages/home.jsx'
 import Login from './pages/login.jsx'
 import Signup from './pages/signup.jsx'
 import Profile from './pages/profile.jsx'
-import HealthJournal from './pages/healthJournal.jsx';
+import HealthLog from './pages/healthLog.jsx';
 import React from 'react'
 
 const router = createBrowserRouter([
@@ -32,7 +32,7 @@ const router = createBrowserRouter([
       }, 
       {
         path: '/health/:petId',
-        element: <HealthJournal />
+        element: <HealthLog />
       }
     ]
   },

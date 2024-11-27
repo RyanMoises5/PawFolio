@@ -49,7 +49,7 @@ const HealthJournal = () => {
   }
 
   return (
-    <div style={{margin:'5px', padding: '2em'}}>
+    <div>
       <h1>Health Log</h1>
       <HealthMap pet={data.pet} pin={{pinState, readyPin}} />
       <HealthInfo pet={data.pet} pin={{pinState, readyPin}}/>

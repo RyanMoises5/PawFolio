@@ -23,12 +23,19 @@ const typeDefs = `
     events: [Event]
     friends: [Pet]
   }
+  
+  type WeightRecord {
+    _id: ID
+    date: String
+    weight: Float
+  }
 
   type Health {
     allergies: [Allergy]
     vet: [Vet]
     diagnosis: [Diag]
     notes: [Note]
+    weightRecords: [WeightRecord]
   }
 
   type Allergy {
@@ -95,6 +102,8 @@ const typeDefs = `
     removeDiag(petId: String!, diagId: String!): Pet
     setPin(petId: String!, diagId: String!, pinPosition: String!): Pet
     removePin(petId: String!, diagId: String!): Pet
+    addWeightRecord(petId: ID!, date: String!, weight: Float!): Health
+    deleteWeightRecord(petId: ID!, recordId: ID!): Pet
   }
 `;
 

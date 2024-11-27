@@ -91,6 +91,11 @@ export const QUERY_PET_HEALTH = gql`
           description
           createdAt
         }
+        weightRecords {  
+          _id
+          date
+          weight
+        }
       }
       owner {
         _id
@@ -99,6 +104,9 @@ export const QUERY_PET_HEALTH = gql`
     }
   }
 `;
+
+
+
 
 // Currently unused
 

@@ -179,3 +179,28 @@ export const REMOVE_EVENT = gql`
     }
   }
 `;
+
+export const ADD_WEIGHT_RECORD = gql`
+  mutation Mutation($petId: ID!, $date: String!, $weight: Float!) {
+    addWeightRecord(petId: $petId, date: $date, weight: $weight) {
+      weightRecords {
+        _id
+        date
+        weight
+      }
+    }
+  }
+`;
+
+export const DELETE_WEIGHT_RECORD = gql`
+  mutation deleteWeightRecord($petId: ID!, $recordId: ID!) {
+    deleteWeightRecord(petId: $petId, recordId: $recordId) {
+      _id
+      weightRecords {
+        _id
+        date
+        weight
+      }
+    }
+  }
+`;

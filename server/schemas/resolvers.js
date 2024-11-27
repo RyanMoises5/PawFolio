@@ -1,5 +1,6 @@
 const { Owner, Pet, Event } = require('../models')
-const { signToken, AuthenticationError } = require('../utils/auth')
+const { signToken } = require('../utils/auth')
+const { AuthenticationError } = require("apollo-server-express");
 
 
 const resolvers = {
@@ -201,7 +202,53 @@ const resolvers = {
         return pet;
       }
       throw new AuthenticationError('Not logged in');
-    }
+    },
+    addWeightRecord: async (parent, { petId, date, weight }, context) => {
+      if (!context.user) {
+        throw new AuthenticationError("You must be logged in!");
+      }
+    
+      const updatedPet = await Pet.findByIdAndUpdate(
+        petId,
+        {
+          $push: { "health.weightRecords": { date, weight } },
+        },
+        { new: true }
+      );
+    
+      if (!updatedPet) {
+        throw new Error("Pet not found.");
+      }
+    
+      return updatedPet.health; // Ensure this returns the updated health data
+    },
+              
+    deleteWeightRecord: async (_, { petId, recordId }, { models }) => {
+      try {
+        const pet = await models.Pet.findById(petId);
+        if (!pet) {
+          throw new Error("Pet not found");
+        }
+    
+        // Ensure health object exists
+        if (!pet.health || !pet.health.weightRecords) {
+          throw new Error("No weight records found for this pet");
+        }
+    
+        // Filter out the weight record by ID
+        pet.health.weightRecords = pet.health.weightRecords.filter(
+          (record) => record._id.toString() !== recordId
+        );
+    
+        await pet.save();
+    
+        return pet; // Return the updated pet with health data
+      } catch (err) {
+        console.error("Error in deleteWeightRecord resolver:", err);
+        throw new Error("Failed to delete weight record");
+      }
+    },
+    
   }
 }
 
