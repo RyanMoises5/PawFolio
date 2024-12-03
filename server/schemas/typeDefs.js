@@ -103,7 +103,7 @@ const typeDefs = `
     setPin(petId: String!, diagId: String!, pinPosition: String!): Pet
     removePin(petId: String!, diagId: String!): Pet
     addWeightRecord(petId: ID!, date: String!, weight: Float!): Health
-    deleteWeightRecord(petId: ID!, recordId: ID!): Pet
+    deleteWeightRecord(petId: ID!, date: String!): Health
   }
 `;
 

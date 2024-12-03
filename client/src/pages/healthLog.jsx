@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useApolloClient } from "@apollo/client";
 import { Line } from "react-chartjs-2";
@@ -16,7 +16,6 @@ import { QUERY_PET_HEALTH } from "../utils/queries";
 import { ADD_WEIGHT_RECORD, DELETE_WEIGHT_RECORD } from "../utils/mutations";
 import Auth from "../utils/auth";
 import "./healthLog.css";
-import { format } from 'date-fns';
 
 ChartJS.register(
   LineElement,
@@ -43,14 +42,20 @@ const HealthLog = () => {
     date: "",
     weight: "",
   });
+  const [selectedPoint, setSelectedPoint] = useState(null);
 
   const [addWeightRecord] = useMutation(ADD_WEIGHT_RECORD, {
     onCompleted: async () => {
-      await client.resetStore(); // Reset the store to refetch all queries
+      await client.resetStore();
     },
   });
-  
-  
+
+  const [deleteWeightRecord] = useMutation(DELETE_WEIGHT_RECORD, {
+    onCompleted: async () => {
+      await client.resetStore();
+    },
+  });
+
   const handleFormToggle = () => toggleForm(!formVisible);
 
   const handleFormChange = (event) => {
@@ -63,57 +68,60 @@ const HealthLog = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-  
     try {
-      const formattedDate = format(new Date(formState.date), "yyyy-MM-dd");
       const newRecord = {
-        date: formattedDate,
+        date: formState.date,
         weight: parseFloat(formState.weight),
       };
-  
-      // Update state optimistically
       setWeightRecords((prevRecords) => [...prevRecords, newRecord]);
-  
-      // Perform the mutation
       await addWeightRecord({
         variables: {
           petId,
-          date: formattedDate,
+          date: formState.date,
           weight: newRecord.weight,
         },
       });
-  
-      // Optionally refetch data to ensure backend sync
-      console.log("Weight record added successfully.");
     } catch (error) {
       console.error("Error adding weight record:", error.message);
     }
   };
-  
+
+  const handleDeleteRecord = async (date) => {
+    try {
+      setWeightRecords((prevRecords) =>
+        prevRecords.filter((record) => record.date !== date)
+      );
+      await deleteWeightRecord({
+        variables: { petId, date },
+      });
+      setSelectedPoint(null); // Reset the selected point
+    } catch (error) {
+      console.error("Error deleting weight record:", error.message);
+    }
+  };
+
+  const handlePointClick = (event, elements, chart) => {
+    if (elements.length > 0) {
+      const index = elements[0].index;
+      const record = weightRecords[index];
+      setSelectedPoint(record);
+    } else {
+      setSelectedPoint(null); // Deselect if clicking outside points
+    }
+  };  
 
   useEffect(() => {
     if (!loading) {
-      console.log("Raw data from query:", data);
       if (data?.pet?.health?.weightRecords) {
         setWeightRecords(data.pet.health.weightRecords);
-        console.log("Set weightRecords:", data.pet.health.weightRecords);
       }
     }
   }, [loading, data]);
-  
-
 
   const prepareGraphData = () => {
-    console.log("Current weightRecords:", weightRecords);
-  
-    const labels = weightRecords.map((record) =>
-      new Date(record.date).toLocaleDateString()
-    );
+    const labels = weightRecords.map((record) => record.date);
     const weights = weightRecords.map((record) => record.weight);
-  
-    console.log("Labels:", labels); // Expect an array of dates
-    console.log("Weights:", weights); // Expect an array of numbers
-  
+
     return {
       labels,
       datasets: [
@@ -123,13 +131,13 @@ const HealthLog = () => {
           borderColor: "rgba(75,192,192,1)",
           backgroundColor: "rgba(75,192,192,0.2)",
           tension: 0.2,
-          pointRadius: 3,
+          pointRadius: 6,
+          pointHoverRadius: 8,
           borderWidth: 2,
         },
       ],
     };
-  };  
-  
+  };
 
   if (!Auth.loggedIn()) {
     return (
@@ -144,38 +152,61 @@ const HealthLog = () => {
     <div>
       <h1>{`${data?.pet?.name}'s Health Log`}</h1>
       <div className="weight-graph">
-      <Line data={prepareGraphData()} key={weightRecords.length} />
+        <Line
+          data={prepareGraphData()}
+          key={weightRecords.length}
+          options={{
+            onClick: (event, elements, chart) => handlePointClick(event, elements, chart),
+          }}
+        />
       </div>
       <div className="add-weight-section">
         {formVisible ? (
-          <>
-            <form onSubmit={handleFormSubmit}>
-              <input
-                type="date"
-                name="date"
-                value={formState.date}
-                onChange={handleFormChange}
-                required
-              />
-              <input
-                type="number"
-                name="weight"
-                step="0.1"
-                value={formState.weight}
-                onChange={handleFormChange}
-                placeholder="Weight (kg)"
-                required
-              />
-              <button type="submit">Add Weight</button>
-              <button onClick={handleFormToggle} type="button">
-                Cancel
-              </button>
-            </form>
-          </>
+          <form onSubmit={handleFormSubmit}>
+            <input
+              type="date"
+              name="date"
+              value={formState.date}
+              onChange={handleFormChange}
+              required
+            />
+            <input
+              type="number"
+              name="weight"
+              step="0.1"
+              value={formState.weight}
+              onChange={handleFormChange}
+              placeholder="Weight (kg)"
+              required
+            />
+            <button type="submit">Add Weight</button>
+            <button onClick={handleFormToggle} type="button">
+              Cancel
+            </button>
+          </form>
         ) : (
           <button onClick={handleFormToggle}>Add New Weight</button>
         )}
       </div>
+      {selectedPoint && (
+        <div className="delete-section">
+          <p>
+            Selected Date: {selectedPoint.date}, Weight: {selectedPoint.weight} kg
+          </p>
+          <button 
+            className="delete-button" 
+            onClick={() => handleDeleteRecord(selectedPoint.date)}
+          >
+            Delete
+          </button>
+          <button 
+            className="cancel-button" 
+            onClick={() => setSelectedPoint(null)}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 };

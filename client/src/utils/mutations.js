@@ -193,9 +193,8 @@ export const ADD_WEIGHT_RECORD = gql`
 `;
 
 export const DELETE_WEIGHT_RECORD = gql`
-  mutation deleteWeightRecord($petId: ID!, $recordId: ID!) {
-    deleteWeightRecord(petId: $petId, recordId: $recordId) {
-      _id
+  mutation Mutation($petId: ID!, $date: String!) {
+    deleteWeightRecord(petId: $petId, date: $date) {
       weightRecords {
         _id
         date
