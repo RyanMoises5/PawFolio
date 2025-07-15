@@ -71,6 +71,7 @@ const HealthLog = () => {
         weight: parseFloat(formState.weight),
       };
   
+      console.log(newRecord);
       // Update state optimistically
       setWeightRecords((prevRecords) => [...prevRecords, newRecord]);
   
@@ -181,11 +182,3 @@ const HealthLog = () => {
 };
 
 export default HealthLog;
-
-
-
-
-
-
-
-
